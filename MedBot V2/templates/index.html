@@ -20,7 +20,6 @@
             transition: background 0.3s ease, color 0.3s ease;
         }
 
-        /* Dark Theme Styles */
         body.dark-theme {
             background: #333333;
             color: #ffffff;
@@ -396,7 +395,7 @@
 
                 const data = await response.json();
 
-                // Remove typing indicator
+     
                 chatMessages.removeChild(typingIndicator);
 
                 // Add bot response to chat
@@ -405,69 +404,65 @@
                 botMessage.innerHTML = `<p>${data.response}</p>`;
                 chatMessages.appendChild(botMessage);
 
-                // Scroll to bottom
+       
                 chatMessages.scrollTop = chatMessages.scrollHeight;
             } catch (error) {
                 console.error("Error:", error);
 
-                // Remove typing indicator
+
                 chatMessages.removeChild(typingIndicator);
 
-                // Show error message
                 const botMessage = document.createElement("div");
                 botMessage.className = "message bot";
                 botMessage.innerHTML = `<p>Sorry, something went wrong. Please try again.</p>`;
                 chatMessages.appendChild(botMessage);
 
-                // Scroll to bottom
+              
                 chatMessages.scrollTop = chatMessages.scrollHeight;
             }
         }
 
-        // Allow pressing Enter to send message
         document.getElementById("user-input").addEventListener("keypress", function (e) {
             if (e.key === "Enter") {
                 sendMessage();
             }
         });
 
-        // Voice Recognition
+        
         const micButton = document.getElementById('mic-button');
         const userInput = document.getElementById('user-input');
 
         micButton.addEventListener('click', () => {
             const recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
-            recognition.lang = 'en-US'; // Set language
+            recognition.lang = 'en-US'; 
             recognition.start();
 
-            // Add listening animation
+       
             micButton.classList.add('listening');
 
             recognition.onresult = (event) => {
                 const transcript = event.results[0][0].transcript;
                 userInput.value = transcript;
 
-                // Remove listening animation
+            
                 micButton.classList.remove('listening');
 
-                // Automatically send the message
+            
                 sendMessage();
             };
 
             recognition.onerror = (event) => {
                 console.error("Speech recognition error:", event.error);
 
-                // Remove listening animation
                 micButton.classList.remove('listening');
             };
 
             recognition.onend = () => {
-                // Remove listening animation
+              
                 micButton.classList.remove('listening');
             };
         });
 
-        // Theme Toggle
         const themeToggle = document.querySelector('.theme-toggle');
         const sunIcon = document.querySelector('.theme-toggle .sun');
         const moonIcon = document.querySelector('.theme-toggle .moon');
