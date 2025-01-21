@@ -1,28 +1,35 @@
 from flask import Flask, request, jsonify, render_template
 import google.generativeai as genai
-import time 
+import time
 import csv
-from flask_cors import CORS 
+from flask_cors import CORS
+from gtts import gTTS
+from io import BytesIO
+import os
+import re
 
 app = Flask(__name__)
 CORS(app)
-
 
 genai.configure(api_key="AIzaSyDZKcpO0SBr87s_sTBOjOJoEQzsvOZp0Hs")
 
 
 def load_medical_keywords():
     medical_keywords = []
-    with open('F:\Front End\chatbot\medical_keywords.csv', mode='r') as file:
-        reader = csv.reader(file)
-        for row in reader:
-            medical_keywords.append(row[0].strip().lower())  # Add each keyword to the list
+    try:
+        with open(r'F:\Front End\chatbot\medical_keywords.csv', mode='r') as file:
+            reader = csv.reader(file)
+            for row in reader:
+                medical_keywords.append(row[0].strip().lower())
+    except FileNotFoundError:
+        print("Error: The file 'medical_keywords.csv' was not found.")
+    except Exception as e:
+        print(f"An error occurred while loading the CSV file: {e}")
     return medical_keywords
 
 medical_keywords = load_medical_keywords()
 
 specific_commands = {
-    
     "hello": "Hi! How can I assist you with your health concerns today?",
     "hi": "Hello! I'm here to help with any medical questions you have.",
     "what can you do?": "I can provide information on health and medical topics. Just ask me anything!",
@@ -33,7 +40,7 @@ specific_commands = {
     "thanks": "You're welcome! Let me know if there's anything else I can assist you with.",
     "bye": "Goodbye! Take care and stay healthy!",
     "goodbye": "Goodbye! Wishing you good health!",
-
+    
 
     "what are the symptoms of COVID-19?": "Common symptoms of COVID-19 include fever, cough, fatigue, loss of taste or smell, sore throat, and difficulty breathing.",
     "what is a healthy diet?": "A healthy diet includes a variety of fruits, vegetables, whole grains, lean proteins, and healthy fats. Avoid processed foods and excessive sugar.",
@@ -54,13 +61,11 @@ specific_commands = {
     "how can I quit smoking?": "To quit smoking, consider using nicotine replacement therapy, seeking support from a counselor, or joining a support group.",
     "what are the benefits of meditation?": "Meditation can reduce stress, improve focus, enhance emotional health, and promote better sleep.",
 
-
     "i feel dizzy": "Dizziness can be caused by dehydration, low blood sugar, or other medical conditions. Sit down, drink water, and seek medical attention if it persists.",
     "i have chest pain": "Chest pain can be serious. If it is severe or accompanied by shortness of breath, seek emergency medical help immediately.",
     "i can't breathe": "Difficulty breathing is a medical emergency. Call emergency services or go to the nearest hospital right away.",
     "i have a high fever": "A high fever can be a sign of infection. Stay hydrated, take fever-reducing medication, and consult a doctor if it persists.",
     "i feel very sick": "If you feel very sick, it's important to rest, stay hydrated, and seek medical attention if symptoms worsen or persist.",
-
 
     "tell me a health tip": "A simple health tip is to drink a glass of water first thing in the morning to kickstart your metabolism and stay hydrated.",
     "what is mindfulness?": "Mindfulness is the practice of being fully present and engaged in the moment, which can help reduce stress and improve mental health.",
@@ -69,60 +74,44 @@ specific_commands = {
     "how can I improve my mental health?": "To improve mental health, practice self-care, stay connected with loved ones, seek professional help if needed, and engage in activities you enjoy.",
 }
 
-
 def is_medical_query(query):
     return any(keyword in query.lower() for keyword in medical_keywords)
 
+def clean_response(response):
 
-def medical_chatbot(query):
-    query_lower = query.lower()
+    response = re.sub(r"\*{2,}", "", response) 
+    response = re.sub(r"\*", "", response)
+    return response
 
 
-    if query_lower in specific_commands:
-        return specific_commands[query_lower]
- 
-    if not is_medical_query(query_lower):
-        return "Sorry, I can only answer health or medical-related questions."
-    
+def generate_concise_response(query):
     try:
-        model = genai.GenerativeModel('gemini-pro') 
+        model = genai.GenerativeModel('gemini-pro')
         response = model.generate_content(
-            f"Provide a point-wise answer to the following medical query.. User query: {query}"
+            f"Provide a concise and easy-to-understand answer to the following medical query: {query}"
         )
-      
-        bot_response = response.text
-
-       
-        if "\n" in bot_response:
-            bot_response = bot_response.replace("\n", "<br>") 
-        else:
-            bot_response = f"- {bot_response}"
-
-        bot_response += "<br><br>Let me know if you have more questions!"
-
-        return bot_response
+        return clean_response(response.text)
     except Exception as e:
         return f"An error occurred: {str(e)}"
-
 
 @app.route("/")
 def home():
     return render_template("index.html")
-
 
 @app.route("/ask", methods=["POST"])
 def ask():
     user_input = request.json.get("message")
     if not user_input:
         return jsonify({"response": "Please provide a valid query."})
-    
-    
-    time.sleep(1) 
-    
 
-    bot_response = medical_chatbot(user_input)
+
+    if not is_medical_query(user_input):
+        return jsonify({"response": "I can only assist with medical-related queries. Please ask a health or medical question."})
+
+    time.sleep(1)
+
+    bot_response = generate_concise_response(user_input)
     return jsonify({"response": bot_response})
 
-# Run the Flask app
 if __name__ == "__main__":
     app.run(debug=True)
