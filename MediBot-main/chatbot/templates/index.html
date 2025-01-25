@@ -1,0 +1,632 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MediBot - Your Medical AI Assistant</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+       
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Poppins', sans-serif;
+        }
+
+        body {
+            margin: 0;
+            padding: 0;
+            background: #f5f5f5;
+            color: #333;
+            transition: background 0.3s ease, color 0.3s ease;
+        }
+
+        body.dark-theme {
+            background: #1e1e1e;
+            color: #ffffff;
+        }
+
+        
+        .chat-container {
+            display: flex;
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        .sidebar {
+            width: 300px;
+            background: #ffffff;
+            border-right: 1px solid #ddd;
+            transition: all 0.3s ease;
+            display: flex;
+            flex-direction: column;
+        }
+
+        body.dark-theme .sidebar {
+            background: #2d2d2d;
+            border-color: #444;
+        }
+
+        .sidebar-header {
+            padding: 20px;
+            font-size: 1.2rem;
+            font-weight: 600;
+            border-bottom: 1px solid #ddd;
+            background: #f8f9fa;
+        }
+
+        body.dark-theme .sidebar-header {
+            background: #3d3d3d;
+            border-color: #444;
+        }
+
+        .chat-history {
+            padding: 10px;
+            overflow-y: auto;
+            flex: 1;
+        }
+
+        .chat-history-item {
+            padding: 15px;
+            margin: 5px 0;
+            background: #f9f9f9;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            border: 1px solid #eee;
+        }
+
+        .chat-history-item:hover {
+            background: #e9ecef;
+            transform: translateY(-2px);
+        }
+
+        body.dark-theme .chat-history-item {
+            background: #3d3d3d;
+            color: #ffffff;
+            border-color: #444;
+        }
+
+        body.dark-theme .chat-history-item:hover {
+            background: #4d4d4d;
+        }
+
+        .main-chat {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            background: #f8f9fa;
+        }
+
+        body.dark-theme .main-chat {
+            background: #2d2d2d;
+        }
+
+        .header {
+            background: #333333;
+            color: #ffffff;
+            padding: 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+        }
+
+        body.dark-theme .header {
+            background: #3d3d3d;
+        }
+
+        .header h1 {
+            font-size: 1.5rem;
+            font-weight: 600;
+        }
+
+        .header button {
+            background: none;
+            border: none;
+            color: inherit;
+            cursor: pointer;
+            font-size: 1.2rem;
+            padding: 8px;
+            border-radius: 50%;
+            transition: all 0.3s ease;
+        }
+
+        .header button:hover {
+            background: rgba(255, 255, 255, 0.1);
+        }
+
+        .messages-area {
+            flex: 1;
+            padding: 20px;
+            overflow-y: auto;
+            background: #ffffff;
+        }
+
+        body.dark-theme .messages-area {
+            background: #2d2d2d;
+        }
+
+        .message {
+            max-width: 80%;
+            padding: 15px;
+            border-radius: 15px;
+            margin-bottom: 20px;
+            position: relative;
+            word-wrap: break-word;
+            animation: fadeIn 0.3s ease;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .message.user {
+            background: #26282a;
+            color: #ffffff;
+            margin-left: auto;
+            border-bottom-right-radius: 5px;
+        }
+
+        .message.bot {
+            background: #f8f9fa;
+            color: #333333;
+            margin-right: auto;
+            border-bottom-left-radius: 5px;
+            border: 1px solid #eee;
+        }
+
+        body.dark-theme .message.bot {
+            background: #3d3d3d;
+            color: #ffffff;
+            border-color: #444;
+        }
+
+        .message .avatar {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 8px;
+            font-weight: 500;
+        }
+
+        .footer {
+            background: #ffffff;
+            padding: 20px;
+            border-top: 1px solid #ddd;
+        }
+
+        body.dark-theme .footer {
+            background: #3d3d3d;
+            border-color: #444;
+        }
+
+        .footer form {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+
+        .footer textarea {
+            flex: 1;
+            padding: 15px;
+            border: 1px solid #ddd;
+            border-radius: 25px;
+            outline: none;
+            font-size: 1rem;
+            background: #f8f9fa;
+            resize: none;
+            max-height: 100px;
+            transition: all 0.3s ease;
+        }
+
+        .footer textarea:focus {
+            border-color: #007bff;
+            box-shadow: 0 0 0 2px rgba(0, 123, 255, 0.25);
+        }
+
+        body.dark-theme .footer textarea {
+            background: #4d4d4d;
+            color: #ffffff;
+            border-color: #555;
+        }
+
+        .footer button,
+        .file-upload label {
+            padding: 12px 20px;
+            background: #007bff;
+            color: #ffffff;
+            border: none;
+            border-radius: 25px;
+            cursor: pointer;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+        }
+
+        .footer button:hover,
+        .file-upload label:hover {
+            background: #0056b3;
+            transform: translateY(-2px);
+        }
+
+        .file-upload input[type="file"] {
+            display: none;
+        }
+
+        .voice-recognition button {
+            background: #28a745;
+        }
+
+        .voice-recognition button:hover {
+            background: #218838;
+        }
+
+        .voice-recognition button.listening {
+            background: #dc3545;
+            animation: pulse 1.5s infinite;
+        }
+
+        @keyframes pulse {
+            0% {
+                transform: scale(1);
+            }
+
+            50% {
+                transform: scale(1.05);
+            }
+
+            100% {
+                transform: scale(1);
+            }
+        }
+
+        .thinking {
+            display: flex;
+            gap: 4px;
+            padding: 10px;
+        }
+
+        .thinking span {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: #007bff;
+            animation: bounce 1.4s infinite ease-in-out both;
+        }
+
+        .thinking span:nth-child(1) {
+            animation-delay: -0.32s;
+        }
+
+        .thinking span:nth-child(2) {
+            animation-delay: -0.16s;
+        }
+
+        @keyframes bounce {
+            0%,
+            80%,
+            100% {
+                transform: scale(0);
+            }
+
+            40% {
+                transform: scale(1);
+            }
+        }
+
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: #f1f1f1;
+            border-radius: 10px;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: #888;
+            border-radius: 10px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: #555;
+        }
+
+        body.dark-theme ::-webkit-scrollbar-track {
+            background: #3d3d3d;
+        }
+
+        body.dark-theme ::-webkit-scrollbar-thumb {
+            background: #666;
+        }
+
+        body.dark-theme ::-webkit-scrollbar-thumb:hover {
+            background: #888;
+        }
+
+        /* Responsive Design */
+        @media (max-width: 768px) {
+            .sidebar {
+                position: absolute;
+                left: -300px;
+                height: 100%;
+                z-index: 1000;
+            }
+
+            .sidebar.active {
+                left: 0;
+            }
+
+            .message {
+                max-width: 90%;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="chat-container">
+        <!-- Sidebar -->
+        <div class="sidebar">
+            <div class="sidebar-header">
+                Chat History
+            </div>
+            <div class="chat-history" id="chat-history">
+                <!-- Chat history will be dynamically populated -->
+            </div>
+        </div>
+
+        <!-- Main Chat Area -->
+        <div class="main-chat">
+            <div class="header">
+                <button onclick="toggleSidebar()" title="Toggle Sidebar">
+                    <i class="fas fa-bars"></i>
+                </button>
+                <h1>MediBot - Personal Medical Assistent</h1>
+                <button onclick="toggleTheme()" title="Toggle Theme">
+                    <i class="fas fa-moon"></i>
+                </button>
+            </div>
+
+            <div class="messages-area" id="messages-area">
+                <div class="message bot">
+                    <div class="avatar">
+                        <i class="fas fa-robot"></i>
+                        <span>MediBot</span>
+                    </div>
+                    <p>Hello! I'm MediBot, your medical assistant. How can I help you today?</p>
+                </div>
+            </div>
+
+            <div class="footer">
+                <form id="chat-form" onsubmit="sendMessage(event)">
+                    <textarea id="user-input" placeholder="Type your message..." rows="1"
+                        onkeydown="handleKeyPress(event)"></textarea>
+                    <div class="voice-recognition">
+                        <button type="button" id="mic-button" title="Voice Input">
+                            <i class="fas fa-microphone"></i>
+                        </button>
+                    </div>
+                    <div class="file-upload">
+                        <input type="file" id="file-input" accept=".txt,.pdf,.doc,.docx">
+                        <label for="file-input" title="Upload File">
+                            <i class="fas fa-paperclip"></i>
+                        </label>
+                    </div>
+                    <button type="submit" title="Send Message">
+                        <i class="fas fa-paper-plane"></i>
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Utility Functions
+        function $(id) { return document.getElementById(id); }
+
+        // Initialize variables
+        let chatHistory = JSON.parse(localStorage.getItem('chatHistory') || '[]');
+        let recognition = null;
+        let isListening = false;
+
+        // Theme handling
+        function toggleTheme() {
+            document.body.classList.toggle('dark-theme');
+            localStorage.setItem('theme', document.body.classList.contains('dark-theme') ? 'dark' : 'light');
+        }
+
+        // Initialize theme
+        if (localStorage.getItem('theme') === 'dark') {
+            document.body.classList.add('dark-theme');
+        }
+
+        // Sidebar handling
+        function toggleSidebar() {
+            document.querySelector('.sidebar').classList.toggle('active');
+        }
+
+        // Message handling
+        function handleKeyPress(event) {
+            if (event.key === 'Enter' && !event.shiftKey) {
+                event.preventDefault();
+                sendMessage(event);
+            }
+        }
+
+        // Chat history
+        function updateChatHistory() {
+            const historyHTML = chatHistory
+                .map(msg => `
+                    <div class="chat-history-item" onclick="loadMessage('${msg}')">
+                        ${msg.length > 50 ? msg.substring(0, 47) + '...' : msg}
+                    </div>
+                `)
+                .join('');
+            $('chat-history').innerHTML = historyHTML;
+        }
+
+        function loadMessage(message) {
+            $('user-input').value = message;
+        }
+
+        // Voice recognition
+        function initializeVoiceRecognition() {
+            if (!recognition) {
+                recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
+                recognition.continuous = false;
+                recognition.lang = 'en-US';
+
+                recognition.onstart = () => {
+                    isListening = true;
+                    $('mic-button').classList.add('listening');
+                };
+
+                recognition.onend = () => {
+                    isListening = false;
+                    $('mic-button').classList.remove('listening');
+                };
+
+                recognition.onresult = (event) => {
+                    const transcript = event.results[0][0].transcript;
+                    $('user-input').value = transcript;
+                };
+
+                recognition.onerror = (event) => {
+                    console.error('Speech recognition error:', event.error);
+                    isListening = false;
+                    $('mic-button').classList.remove('listening');
+                };
+            }
+
+            if (isListening) {
+                recognition.stop();
+            } else {
+                recognition.start();
+            }
+        }
+
+        $('mic-button').onclick = initializeVoiceRecognition;
+
+        // File handling
+        $('file-input').onchange = function (event) {
+            const file = event.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    $('user-input').value = e.target.result;
+                };
+                reader.readAsText(file);
+            }
+        };
+
+        // Message sending
+        async function sendMessage(event) {
+            event.preventDefault();
+            const userInput = $('user-input');
+            const message = userInput.value.trim();
+
+            if (!message) return;
+
+            // Add to chat history
+            if (!chatHistory.includes(message)) {
+                chatHistory.unshift(message);
+                if (chatHistory.length > 10) chatHistory.pop();
+                localStorage.setItem('chatHistory', JSON.stringify(chatHistory));
+                updateChatHistory();
+            }
+
+            // Add user message to chat
+            appendMessage('user', message);
+            userInput.value = '';
+
+            // Show thinking animation
+            const thinkingId = showThinking();
+
+            try {
+                const response = await fetch('/ask', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ message }),
+                });
+
+                if (!response.ok) {
+                    throw new Error(`HTTP error! Status: ${response.status}`);
+                }
+
+                const data = await response.json();
+
+                // Remove thinking animation
+                hideThinking(thinkingId);
+
+                // Add bot response to chat
+                appendMessage('bot', data.response);
+            } catch (error) {
+                console.error('Error:', error);
+                hideThinking(thinkingId);
+                appendMessage('bot', 'Sorry, something went wrong. Please try again.');
+            }
+        }
+
+        // Append message to chat
+        function appendMessage(sender, message) {
+            const messagesArea = $('messages-area');
+            const messageDiv = document.createElement('div');
+            messageDiv.className = `message ${sender}`;
+            messageDiv.innerHTML = `
+                <div class="avatar">
+                    <i class="fas ${sender === 'user' ? 'fa-user' : 'fa-robot'}"></i>
+                    <span>${sender === 'user' ? 'You' : 'MediBot'}</span>
+                </div>
+                <p>${message}</p>
+            `;
+            messagesArea.appendChild(messageDiv);
+            messagesArea.scrollTop = messagesArea.scrollHeight;
+        }
+
+        // Show thinking animation
+        function showThinking() {
+            const messagesArea = $('messages-area');
+            const thinkingDiv = document.createElement('div');
+            thinkingDiv.className = 'message bot';
+            thinkingDiv.innerHTML = `
+                <div class="avatar">
+                    <i class="fas fa-robot"></i>
+                    <span>MediBot</span>
+                </div>
+                <p class="thinking">
+                    <span>.</span>
+                    <span>.</span>
+                    <span>.</span>
+                </p>
+            `;
+            messagesArea.appendChild(thinkingDiv);
+            messagesArea.scrollTop = messagesArea.scrollHeight;
+            return thinkingDiv;
+        }
+
+        function hideThinking(thinkingDiv) {
+            thinkingDiv.remove();
+        }
+    
+    
+    </script>
+        
+        <script src="https://cdn.botpress.cloud/webchat/v2.2/inject.js"></script>
+        <script src="https://files.bpcontent.cloud/2025/01/25/06/20250125065111-NQS723M9.js"></script>
+</body>
+
+</html>
